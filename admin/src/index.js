@@ -1,6 +1,12 @@
 const express = require("express")
 const config = require("config")
-const {fetchInvestmentById} = require("./api")
+const {
+  fetchInvestmentById,
+  fetchCompanies,
+  fetchInvestments,
+  postHoldingsReport,
+} = require("./api")
+const {mapInvestmentToHoldings, convertToCSV} = require("./helpers")
 
 const app = express()
 
@@ -11,6 +17,24 @@ app.get("/investments/:id", async (req, res) => {
     const {id} = req.params
     const investment = await fetchInvestmentById(id)
     res.send(investment)
+  } catch (e) {
+    console.log(e)
+    res.sendStatus(500)
+  }
+})
+
+app.post("/reports/holdings", async (_, res) => {
+  try {
+    const [companies, investments] = await Promise.all([
+      fetchCompanies(),
+      fetchInvestments(),
+    ])
+    const holdings = investments.flatMap((investment) =>
+      mapInvestmentToHoldings(investment, companies),
+    )
+    const csvData = await convertToCSV(holdings)
+    await postHoldingsReport(csvData)
+    res.sendStatus(204)
   } catch (e) {
     console.log(e)
     res.sendStatus(500)

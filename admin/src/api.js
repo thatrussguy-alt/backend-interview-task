@@ -23,4 +23,12 @@ const fetchInvestments = async () => {
   return investments
 }
 
-module.exports = {fetchCompanies, fetchInvestmentById, fetchInvestments}
+const postHoldingsReport = async (csvData) =>
+  investmentsServiceAPI.post("/export", {export: csvData})
+
+module.exports = {
+  fetchCompanies,
+  fetchInvestmentById,
+  fetchInvestments,
+  postHoldingsReport,
+}
